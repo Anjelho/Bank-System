@@ -99,8 +99,10 @@ def displaySp(num):
     if not found:
         print("No existing record with this number")
 
+def transfer(num1,num2,amount):
+        pass
 
-def depositAndWithdraw(num1, num2):
+def depositAndWithdraw(num1, num2, amount):
     file = pathlib.Path("accounts.data")
     if file.exists():
         infile = open('accounts.data', 'rb')
@@ -108,18 +110,20 @@ def depositAndWithdraw(num1, num2):
         infile.close()
         os.remove('accounts.data')
         for item in mylist:
-            if item.accNo == num1:
+            while item.accNo == num1:
                 if num2 == 1:
-                    amount = int(input("Enter the amount to deposit : "))
                     item.deposit += amount
                     print("Your account is updated")
+                    break
                 elif num2 == 2:
-                    amount = int(input("Enter the amount to withdraw : "))
-                    if amount <= item.deposit:
+                    if amount <= item.deposit and item.type == 'C':
                         item.deposit -= amount
+                    elif amount <= item.deposit and item.type == 'D':
+                        print(f'You have a Deposit Account and Withdrawals are forbidden until '+str(item.termdate))
+                        break
                     else:
                         print("You cannot withdraw larger amount!")
-
+                        break
     else:
         print("No records to Search")
     outfile = open('newaccounts.data', 'wb')
@@ -163,12 +167,10 @@ def modifyAccount(num):
                         item.termdate = item.date + timedelta(days=365)
                         break
                 item.deposit = int(input("Enter the Amount : "))
-
         outfile = open('newaccounts.data', 'wb')
         pickle.dump(oldlist, outfile)
         outfile.close()
         os.rename('newaccounts.data', 'accounts.data')
-
 
 def writeAccountsFile(account):
     file = pathlib.Path("accounts.data")
@@ -190,7 +192,7 @@ ch = ''
 num = 0
 intro()
 
-while ch != 8:
+while ch != 9:
     # system("cls");
     print("\tMAIN MENU")
     print("\t1. NEW ACCOUNT")
@@ -200,7 +202,8 @@ while ch != 8:
     print("\t5. ALL ACCOUNT HOLDER LIST")
     print("\t6. CLOSE AN ACCOUNT")
     print("\t7. MODIFY AN ACCOUNT")
-    print("\t8. EXIT")
+    print("\t8. TRANSFER BETWEEN BANK ACCOUNTS")
+    print("\t9. EXIT")
     print("\tSelect Your Option (1-8) ")
     ch = input()
     # system("cls");
@@ -209,10 +212,12 @@ while ch != 8:
         writeAccount()
     elif ch == '2':
         num = int(input("\tEnter The account No. : "))
-        depositAndWithdraw(num, 1)
+        amount = int(input("\tEnter the amount to deposit : "))
+        depositAndWithdraw(num, 1, amount)
     elif ch == '3':
         num = int(input("\tEnter The account No. : "))
-        depositAndWithdraw(num, 2)
+        amount = int(input("\tEnter the amount to deposit : "))
+        depositAndWithdraw(num, 2, amount)
     elif ch == '4':
         num = int(input("\tEnter The account No. : "))
         displaySp(num)
@@ -225,6 +230,11 @@ while ch != 8:
         num = int(input("\tEnter The account No. : "))
         modifyAccount(num)
     elif ch == '8':
+        num1 = int(input("\tEnter The account id to transfer money from : "))
+        num2 = int(input("\tEnter The account id to transfer money to : "))
+        amount = int(input("\tEnter the amount to deposit : "))
+        transfer(num1,num2,amount)
+    elif ch == '9':
         print("\tThanks for using bank managemnt system")
         break
     else:

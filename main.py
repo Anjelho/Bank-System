@@ -187,7 +187,6 @@ def writeAccountsFile(account):
     outfile.close()
     os.rename('newaccounts.data', 'accounts.data')
 
-
 # start of the program
 ch = ''
 num = 0

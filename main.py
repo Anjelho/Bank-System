@@ -6,21 +6,24 @@ from datetime import timedelta
 
 
 class Account:
-    accNo = 0
-    date = date.today()
-    deposit = 0
-    type = ''
-    termdate = ''
+
+    def __init__(self, accNo=0, date=date.today(), deposit=0, type='', termdate=''):
+        self.accNo = accNo
+        self.date = date
+        self.deposit = deposit
+        self.type = type
+        self.termdate = termdate
 
     def createAccount(self):
+        x = ''
         self.accNo = int(input("Enter the account no : "))
-        while type != "C" or x != "D":
-            typy = input('Please specify the correct type [C/D]: ')
-            if typy == "C":
-                self.type = typy
+        while x != "C" or x != "D":
+            x = input('Please specify the account type [C/D]: ')
+            if x == "C":
+                self.type = x
                 break
-            elif typy == "D":
-                self.type = typy
+            elif x == "D":
+                self.type = x
                 self.termdate = date.today() + timedelta(days=365)
                 break
         self.deposit = int(input("Enter The Initial amount : "))
@@ -32,18 +35,6 @@ class Account:
         print("Type of Account : ", self.type)
         print("Term date : ", self.termdate)
         print("Balance : ", self.deposit)
-
-    def modifyAccount(self):
-        print("Account Number : ", self.accNo)
-        x = input('Modify the type of account [C/D] : ')
-        while x != "C" or x != "D":
-            x = input('Please specify the correct type [C/D]: ')
-            if x == "C" or x == "D":
-                self.type = x
-                break
-        if x == 'D':
-            self.termdate = date.today().year + 1
-        self.deposit = int(input("Modify Balance :"))
 
     def depositAmount(self, amount):
         self.deposit += amount
@@ -163,7 +154,14 @@ def modifyAccount(num):
         os.remove('accounts.data')
         for item in oldlist:
             if item.accNo == num:
-                item.type = input("Enter the account Type : ")
+                while item.type != "C" or item.type != "D":
+                    item.type = input('Please specify the account type [C/D]: ')
+                    if item.type == "C":
+                        item.termdate = ''
+                        break
+                    elif item.type == "D":
+                        item.termdate = item.date + timedelta(days=365)
+                        break
                 item.deposit = int(input("Enter the Amount : "))
 
         outfile = open('newaccounts.data', 'wb')
@@ -232,5 +230,4 @@ while ch != 8:
     else:
         print("Invalid choice")
 
-    ch = input("Enter your choice : ")
-print('WTF')
+    ch = input("Press 'Enter' to Continue\t")

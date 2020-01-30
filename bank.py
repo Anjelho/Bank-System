@@ -1,8 +1,11 @@
 from datetime import date
+from datetime import datetime
 from datetime import timedelta
+import datetime
 import json
 
 accfp = 'accounts.json'
+history = 'history.json'
 
 class Account:
 
@@ -56,6 +59,19 @@ class Account:
         with open(accfp,'w') as outfile:
             json.dump(data, outfile)
 
+def record(type:str, amount, num1, num2=''):
+        timestamp = datetime.datetime.now()
+        with open(history, 'r') as infile:
+            hist = json.load(infile)
+            hist[str(timestamp)] = {}
+            hist[str(timestamp)]["Transaction Type"] = type
+            hist[str(timestamp)]['AccountID'] = num1
+            if type == "Transfer":
+                hist[str(timestamp)]['To'] = num2
+            hist[str(timestamp)]['amount'] = amount
+        with open(history, 'w') as outfile:
+            json.dump(hist, outfile)
+
 
 def modifyAccount():
     num = str(input("Please choose the ID of the account to be modified: "))
@@ -98,6 +114,8 @@ def depositAccount():
 
     with open(accfp, 'w') as outfile:
         json.dump(data, outfile)
+
+    record("Deposit",amount,num)
     print('Deposit Accepted')
 
 def withdrawAccount():
@@ -107,7 +125,7 @@ def withdrawAccount():
         data = json.load(infile)
         if data[num]['deposit'] < amount:
             print("You don't have enough money. You have: "+ data[num]['deposit'])
-        elif data[num]['termdate'] in data[num] and data[num]['termdate'] == str(date.today()):
+        elif 'termdate' in data[num] and data[num]['termdate'] != str(date.today()):
             print("It is a Deposit account. You can transfer money only on:"+ data[num]['termdate'])
         else:
             data[num]['deposit'] -= amount
@@ -115,6 +133,8 @@ def withdrawAccount():
 
     with open(accfp, 'w') as outfile:
         json.dump(data, outfile)
+
+    record("Withdraw", amount, num)
     print('Amount withdraw end.')
 
 def transferAccount():
@@ -125,7 +145,7 @@ def transferAccount():
         data = json.load(infile)
         if data[num1]['deposit'] < amount:
             print("You don't have enough money. You have: " + data[num1]['deposit'])
-        elif data[num1]['termdate'] in data[num1] or data[num1]['termdate'] != str(date.today()):
+        elif 'termdate' in data[num1] and data[num1]['termdate'] != str(date.today()):
             raise ValueError("It is a Deposit account. You can transfer money only on:" + data[num]['termdate'])
         else:
             data[num1]['deposit'] -= amount
@@ -133,7 +153,9 @@ def transferAccount():
             print('Amount withdraw Successfully')
     with open(accfp, 'w') as outfile:
         json.dump(data, outfile)
-        print('Transaction end.')
+
+    record("Transfer",amount,num1,num2)
+    print('Transaction end.')
 
 def balanceAccount():
     num = str(input("Please select the id to display the balance: "))

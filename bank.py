@@ -37,6 +37,13 @@ class Account:
             if self.accNo in data.keys():
                 print('There is already Bank Account ID associated with this number: ')
                 print('Action Terminated.')
+            elif self.type == "C":
+                data[self.accNo] = {}
+                data[self.accNo]['created'] = str(date.today())
+                data[self.accNo]['deposit'] = self.deposit
+                data[self.accNo]['interest'] = self.interest
+                data[self.accNo]['type'] = self.type
+                print("Current Account Created with ID: " + str(self.accNo))
             else:
                 data[self.accNo] = {}
                 data[self.accNo]['created'] = str(date.today())
@@ -44,6 +51,7 @@ class Account:
                 data[self.accNo]['interest'] = self.interest
                 data[self.accNo]['type'] = self.type
                 data[self.accNo]['termdate'] = str(self.termdate)
+                print("Deposit Account Created with ID: " + str(self.accNo))
 
         with open(accfp,'w') as outfile:
             json.dump(data, outfile)
@@ -53,12 +61,13 @@ def modifyAccount():
     num = str(input("Please choose the ID of the account to be modified: "))
     with open(accfp, 'r') as infile:
         data = json.load(infile)
-        newtype = input('Please choose the account type (C/D): ')
-        newinterest = input('Please choose the interest rate: ')
-        newdeposit = input('Enter the new deposit amount: ')
-        data[num]['type'] = newtype
-        data[num]['interest'] = newinterest
-        data[num]['deposit'] = newdeposit
+        data[num]['type'] = input('Please choose the account type (C/D): ')
+        data[num]['interest'] = float(input('Please choose the interest rate: '))
+        data[num]['deposit'] = int(input('Enter the new deposit amount: '))
+        if data[num]['type'] == "D":
+            data[num]['termdate'] = str(date.today() + timedelta(days=365))
+        else:
+            del data[num]['termdate']
         print('Account Updated')
 
     with open(accfp, 'w') as outfile:
@@ -98,8 +107,8 @@ def withdrawAccount():
         data = json.load(infile)
         if data[num]['deposit'] < amount:
             print("You don't have enough money. You have: "+ data[num]['deposit'])
-        elif data[num]['type']=="D":
-            print("It is a Deposit accont. You cannot transfer money!")
+        elif data[num]['termdate'] in data[num] and data[num]['termdate'] == str(date.today()):
+            print("It is a Deposit account. You can transfer money only on:"+ data[num]['termdate'])
         else:
             data[num]['deposit'] -= amount
             print("Amount withdraw successfully.")
@@ -115,9 +124,9 @@ def transferAccount():
     with open(accfp, 'r') as infile:
         data = json.load(infile)
         if data[num1]['deposit'] < amount:
-            print("You don't have enough money. You have: "+ data[num1]['deposit'])
-        elif data[num1]['type'] == "D":
-            print("It is a Deposit accont. You cannot transfer money!")
+            print("You don't have enough money. You have: " + data[num1]['deposit'])
+        elif data[num1]['termdate'] in data[num1] or data[num1]['termdate'] != str(date.today()):
+            raise ValueError("It is a Deposit account. You can transfer money only on:" + data[num]['termdate'])
         else:
             data[num1]['deposit'] -= amount
             data[num2]['deposit'] += amount
@@ -135,7 +144,6 @@ def balanceAccount():
 def listAccount():
     with open(accfp, 'r') as infile:
         data = json.load(infile)
-        print(data.keys())
         dumped = json.dumps(data, indent=2)
         print(dumped)
 
@@ -190,5 +198,3 @@ while ch != 9:
         print("Invalid choice")
 
     ch = input("Press 'Enter' to Continue\t")
-
-

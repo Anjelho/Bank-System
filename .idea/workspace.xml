@@ -2,14 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1e6cc17b-edc9-4adf-b38a-05aa953db724" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/accounts.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bank.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Jantask.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Jantask.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts.data" beforeDir="false" afterPath="$PROJECT_DIR$/accounts.data" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testcase.py" beforeDir="false" afterPath="$PROJECT_DIR$/testcase.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts.json" beforeDir="false" afterPath="$PROJECT_DIR$/accounts.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -142,7 +137,14 @@
       <option name="project" value="LOCAL" />
       <updated>1580316781759</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="created working bank.py">
+      <created>1580390883600</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1580390883600</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -160,7 +162,8 @@
       <path value="$PROJECT_DIR$/banking-system" />
     </ignored-roots>
     <MESSAGE value="Improvements on the transfer" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improvements on the transfer" />
+    <MESSAGE value="created working bank.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="created working bank.py" />
   </component>
   <component name="WindowStateProjectService">
     <state x="438" y="-883" key="#Inspections" timestamp="1580316294951">
@@ -179,10 +182,10 @@
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
     <state x="554" y="-929" key="#main/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580298247263" />
-    <state x="484" y="-948" key="CommitChangelistDialog2" timestamp="1580316781126">
+    <state x="484" y="-948" key="CommitChangelistDialog2" timestamp="1580390881944">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state x="484" y="-948" key="CommitChangelistDialog2/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580316781126" />
+    <state x="484" y="-948" key="CommitChangelistDialog2/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390881944" />
     <state x="-22" y="-988" width="1736" height="896" key="DiffContextDialog" timestamp="1580316295293">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
@@ -191,30 +194,30 @@
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
     <state x="626" y="-786" key="FileChooserDialogImpl/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580371813882" />
-    <state width="1899" height="295" key="GridCell.Tab.0.bottom" timestamp="1580390657262">
+    <state width="1899" height="295" key="GridCell.Tab.0.bottom" timestamp="1580392899897">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state width="1899" height="295" key="GridCell.Tab.0.bottom/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390657262" />
-    <state width="1899" height="295" key="GridCell.Tab.0.center" timestamp="1580390657262">
+    <state width="1899" height="295" key="GridCell.Tab.0.bottom/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580392899897" />
+    <state width="1899" height="295" key="GridCell.Tab.0.center" timestamp="1580392899897">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state width="1899" height="295" key="GridCell.Tab.0.center/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390657262" />
-    <state width="1899" height="295" key="GridCell.Tab.0.left" timestamp="1580390657262">
+    <state width="1899" height="295" key="GridCell.Tab.0.center/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580392899897" />
+    <state width="1899" height="295" key="GridCell.Tab.0.left" timestamp="1580392899897">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state width="1899" height="295" key="GridCell.Tab.0.left/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390657262" />
-    <state width="1899" height="295" key="GridCell.Tab.0.right" timestamp="1580390657262">
+    <state width="1899" height="295" key="GridCell.Tab.0.left/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580392899897" />
+    <state width="1899" height="295" key="GridCell.Tab.0.right" timestamp="1580392899897">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state width="1899" height="295" key="GridCell.Tab.0.right/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390657262" />
+    <state width="1899" height="295" key="GridCell.Tab.0.right/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580392899897" />
     <state x="347" y="-899" key="SettingsEditor" timestamp="1580316300264">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
     <state x="347" y="-899" key="SettingsEditor/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580316300264" />
-    <state x="638" y="-624" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1580390858904">
+    <state x="638" y="-624" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1580393027658">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>
-    <state x="638" y="-624" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580390858904" />
+    <state x="638" y="-624" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1536.824/-114.-1080.1920.1080@-114.-1080.1920.1080" timestamp="1580393027658" />
     <state x="509" y="-845" width="672" height="678" key="search.everywhere.popup" timestamp="1580310840733">
       <screen x="-114" y="-1080" width="1920" height="1080" />
     </state>

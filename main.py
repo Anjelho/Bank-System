@@ -7,16 +7,18 @@ from datetime import timedelta
 
 class Account:
 
-    def __init__(self, accNo=0, date=date.today(), deposit=0, type='', termdate=''):
+    def __init__(self, accNo=0, interest=0, date=date.today(), deposit=0, type='', termdate=''):
         self.accNo = accNo
         self.date = date
         self.deposit = deposit
+        self.interest = interest
         self.type = type
         self.termdate = termdate
 
     def createAccount(self):
         x = ''
         self.accNo = int(input("Enter the account no : "))
+        self.interest = float(input("Enter the interest ratio : "))
         while x != "C" or x != "D":
             x = input('Please specify the account type [C/D]: ')
             if x == "C":
@@ -99,7 +101,7 @@ def displaySp(num):
     if not found:
         print("No existing record with this number")
 
-def transfer(num1,num2,amount):
+    def transfer(self, amount, account):
         pass
 
 def depositAndWithdraw(num1, num2, amount):
@@ -162,11 +164,12 @@ def modifyAccount(num):
                     item.type = input('Please specify the account type [C/D]: ')
                     if item.type == "C":
                         item.termdate = ''
+                        item.deposit = int(input("Enter the Amount : "))
                         break
                     elif item.type == "D":
                         item.termdate = item.date + timedelta(days=365)
+                        item.deposit = int(input("Enter the Amount : "))
                         break
-                item.deposit = int(input("Enter the Amount : "))
         outfile = open('newaccounts.data', 'wb')
         pickle.dump(oldlist, outfile)
         outfile.close()
@@ -233,7 +236,7 @@ while ch != 9:
         num1 = int(input("\tEnter The account id to transfer money from : "))
         num2 = int(input("\tEnter The account id to transfer money to : "))
         amount = int(input("\tEnter the amount to deposit : "))
-        transfer(num1,num2,amount)
+        #transfer(num1,num2,amount)
     elif ch == '9':
         print("\tThanks for using bank managemnt system")
         break

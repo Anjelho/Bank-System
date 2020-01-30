@@ -1,15 +1,12 @@
 from datetime import date
 from datetime import timedelta
 
-class Account:
+accounts = {}
+accounts["AccNr"] = {}
+accounts["AccNr"]["created"] = str(date.today())
+accounts['AccNr']['deposit'] = "500"
+accounts['AccNr']['interest'] = "5.5"
+accounts['AccNr']['type'] = "C"
+accounts['AccNr']['termdate'] = "20-02-21"
 
-    def __init__(self, accNo=0, date=date.today(), deposit=0, type='', termdate=''):
-        self.accNo = accNo
-        self.date = date
-        self.deposit = deposit
-        self.type = type
-        self.termdate = termdate
-
-x=Account(1,date.today(),deposit=300,type='C',termdate='')
-
-print(x.type)    
+print(accounts)

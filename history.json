@@ -1,1 +1,1 @@
-{"2020-01-30 17:11:44.301152": {"Transaction Type": "Deposit", "AccountID": "1", "amount": 10}, "2020-01-30 17:12:03.729684": {"Transaction Type": "Withdraw", "AccountID": "1", "amount": 1}}
+{"1": {"Time": "2020-01-30 18:02:53.328212", "Transaction Type": "Withdraw", "AccountID": "1", "amount": 10}}

@@ -61,14 +61,19 @@ class Account:
 
 def record(type:str, amount, num1, num2=''):
         timestamp = datetime.datetime.now()
+
         with open(history, 'r') as infile:
             hist = json.load(infile)
-            hist[str(timestamp)] = {}
-            hist[str(timestamp)]["Transaction Type"] = type
-            hist[str(timestamp)]['AccountID'] = num1
+            if not hist:
+                hist["1"] = {}
+            else:
+                hist[str(int(list(hist.keys())[-1])+1)] = {}
+            hist[str(int(list(hist.keys())[-1]))]['Time']= str(timestamp)
+            hist[str(int(list(hist.keys())[-1]))]["Transaction Type"] = type
+            hist[str(int(list(hist.keys())[-1]))]['AccountID'] = num1
             if type == "Transfer":
-                hist[str(timestamp)]['To'] = num2
-            hist[str(timestamp)]['amount'] = amount
+                hist[str(int(list(hist.keys())[-1]))]['RecipientID'] = num2
+            hist[str(int(list(hist.keys())[-1]))]['amount'] = amount
         with open(history, 'w') as outfile:
             json.dump(hist, outfile)
 

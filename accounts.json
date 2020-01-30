@@ -1,0 +1,1 @@
+{"1": {"created": "2020-01-30", "deposit": 909, "interest": 1.1, "type": "C"}, "2": {"created": "2020-01-30", "deposit": 223000, "interest": 2.2, "type": "C"}, "3": {"created": "2020-01-30", "deposit": 2200, "interest": 3.3, "type": "D", "termdate": "2021-01-29"}, "4": {"created": "2020-01-30", "deposit": 4000, "interest": 4.4, "type": "D", "termdate": "2021-01-29"}}

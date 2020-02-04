@@ -1,0 +1,4 @@
+{
+  "postgresql":"host='172.16.33.234' port=5432 dbname=ipsos user=ivaylo password='ipsos'",
+  "localdb":"host='localhost' port=5555 dbname=postgres user=postgres password='adastra'"
+}

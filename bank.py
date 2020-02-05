@@ -16,6 +16,9 @@ class Account:
         self.termdate = termdate
         self.interest = interest
 
+    def defType(self):
+        pass
+
     def createAccount(self):
         x = ''
         self.accNo = str(int(input("Enter the account no : ")))

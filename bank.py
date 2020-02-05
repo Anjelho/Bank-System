@@ -1,230 +1,198 @@
+from typing import List
+from abc import ABC, abstractmethod
 from datetime import date
-from datetime import datetime
 from datetime import timedelta
-import datetime
+from datetime import datetime as dtm
+import psycopg2 as pg
 import json
 
-accfp = 'accounts.json'
-history = 'history.json'
+def connect_to_postgres():
+    """Returns a connection to the database.
+
+    TODO: Remove hardcoded connection string
+    """
+    with open("config/parameters.json") as json_config:
+        cfg = json.load(json_config)
+
+    return pg.connect(cfg['postgresql'])
 
 class Account:
 
-    def __init__(self, accNo=0, deposit=0, type='', termdate='', interest=0):
-        self.accNo = accNo
-        self.deposit = deposit
-        self.type = type
-        self.termdate = termdate
-        self.interest = interest
+    __acclist: List["Account"]
+    __persistanceengine: "PersistanceEngine"
 
-    def defType(self):
+
+    def getAccList(self):
+        return self.__acclist
+
+
+    def __init__(self, id, balance, opening_date, acctype, interest_rate, persistanceengine: "PersistanceEngine"):
+        self.id = id
+        self.balance = balance
+        self.opening_date = opening_date
+        self.interest_recalc_date = opening_date
+        self.interest_rate = interest_rate
+        self.__acclist = []
+        self.persisanceengine = persistanceengine
+
+        if acctype == "c" or acctype == "C":
+            self.type = acctype.upper()
+        elif acctype == "d" or acctype == "D":
+            self.type = acctype.upper()
+            self.term_date = date.today() + timedelta(days=365)
+        else:
+            raise ValueError("not a valid acc type please choose C or D !")
+
+
+    def days_between(self):
+        d1 = dtm.strptime(str(self.interest_recalc_date), "%Y-%m-%d")
+        d2 = dtm.strptime(str(date.today()), "%Y-%m-%d")
+        difference = abs((d2 - d1).days)
+        i = 1
+        while i <= difference:
+            self.balance = self.balance * (self.interest_rate/100+1)
+            i += 1
+        return self.balance
+
+
+    def deposit(self, amount):
+        self.balance += amount
+        tr = Transaction(self.id, self.id, amount, 'deposit')
+        self.__acclist.append(tr)
+
+
+    def withdraw(self, amount):
+        Account.days_between(self)
+        if self.balance < amount:
+            raise ValueError("Withdraw not possible. Not enough funds.")
+        elif hasattr(self, 'term_date') and self.term_date > date.today():
+            raise ValueError("It is a Deposit account. And the term_date is: " + str(self.term_date))
+        else:
+            self.balance -= amount
+            tr = Transaction(self.id, self.id, amount, 'withdraw')
+            self.__acclist.append(tr)
+            self.interest_recalc_date = str(date.today())
+
+
+
+    def transfer(self, amount, tgt):
+        Account.days_between(self)
+        if self.balance < amount:
+            raise ValueError("Withdraw not possible. Not enough funds.")
+        elif hasattr(self, 'term_date') and self.term_date > date.today():
+            raise ValueError("It is a Deposit account.")
+        else:
+            self.balance -= amount
+            tgt.balance += amount
+            tr = Transaction(self.id, tgt.id, amount, 'transfer')
+            self.__acclist.append(tr)
+            self.interest_recalc_date = str(date.today())
+
+
+    def displayAcc(self):
+        Account.days_between(self)
+        print("Acc Nr: "+ str(self.id))
+        print("Acc balance: " + str(self.balance))
+        print("Acc opening_date: " + str(self.opening_date))
+        if hasattr(self, 'term_date'):
+            print("Acc term_date: " + str(self.term_date))
+            print("Acc interest_rate: " + str(self.interest_rate))
+        if hasattr(self, 'interest_recalc_date'):
+            print("Acc recalculation date: " + str(self.interest_recalc_date))
+        print("Acc type: " + self.type)
+
+
+    def persistAccount(self):
+        Account.days_between(self)
+        if hasattr(self, 'id'):
+            self.__acclist.append(self.id)
+        if hasattr(self, 'balance'):
+            self.__acclist.append(self.balance)
+        if hasattr(self, 'opening_date'):
+            self.__acclist.append(self.opening_date)
+        if hasattr(self, 'term_date'):
+            self.__acclist.append(self.term_date)
+        if hasattr(self, 'interest_rate'):
+            self.__acclist.append(self.interest_rate)
+        if hasattr(self, 'interest_recalc_date'):
+            self.__acclist.append(self.interest_recalc_date)
+        if hasattr(self, 'type'):
+            self.__acclist.append(self.type)
+        print(self.__acclist)
+
+
+class Transaction:
+
+    __trlist: List["Transaction"]
+
+    def getTrList(self):
+        return self.__trlist
+
+
+    def __init__(self, src, tgt, amount, type):
+
+        self.__trlist = []
+
+        self.__trlist.append(src)
+        self.__trlist.append(tgt)
+        self.__trlist.append(amount)
+        self.__trlist.append(type)
+        return(self.persistanceengine(self.__trlist))
+
+
+class PersistanceEngine(ABC):
+
+    @abstractmethod
+    def persistAcc(self):
         pass
 
-    def createAccount(self):
-        x = ''
-        self.accNo = str(int(input("Enter the account no : ")))
-        self.interest = float(input("Enter the interest ratio : "))
-        while x != "C" or x != "D":
-            x = input('Please specify the account type [C/D]: ')
-            if x == "C":
-                self.type = x
-                break
-            elif x == "D":
-                self.type = x
-                termdata = date.today() + timedelta(days=365)
-                self.termdate = str(termdata)
-                break
-        self.deposit = int(input("Enter The Initial amount : "))
+    @abstractmethod
+    def persistTransaction(self):
+        pass
+
+    @abstractmethod
+    def getAllAcc(self):
+        pass
 
 
-    def saveAccount(self):
+class PGPersistanceEngine(PersistanceEngine):
 
-        with open(accfp, 'r') as infile:
-            data = json.load(infile)
-            if self.accNo in data.keys():
-                print('There is already Bank Account ID associated with this number: ')
-                print('Action Terminated.')
-            elif self.type == "C":
-                data[self.accNo] = {}
-                data[self.accNo]['created'] = str(date.today())
-                data[self.accNo]['deposit'] = self.deposit
-                data[self.accNo]['interest'] = self.interest
-                data[self.accNo]['type'] = self.type
-                print("Current Account Created with ID: " + str(self.accNo))
-            else:
-                data[self.accNo] = {}
-                data[self.accNo]['created'] = str(date.today())
-                data[self.accNo]['deposit'] = self.deposit
-                data[self.accNo]['interest'] = self.interest
-                data[self.accNo]['type'] = self.type
-                data[self.accNo]['termdate'] = str(self.termdate)
-                print("Deposit Account Created with ID: " + str(self.accNo))
+    def __init__(self,id,balance,opening_date,interest_rate,type,term_date,interest_recalc_date):
+        self.id = id
+        self.balance = balance
+        self.opening_date = opening_date
+        self.interest_rate = interest_rate
+        self.type = type
+        self.term_date = term_date
+        self.interest_recalc_date = interest_recalc_date
 
-        with open(accfp,'w') as outfile:
-            json.dump(data, outfile)
+    def persistAcc(self):
+        conn = connect_to_postgres()
+        q = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date, term_date)
+                        values({},{},{},{},{},{},{})'''.format(self.id, self.balance, self.interest_rate, '\''+self.type+'\'', '\''+self.interest_recalc_date+'\'', '\''+self.opening_date+'\'', '\''+self.term_date+'\'')
+        cur = conn.cursor()
+        print(q)
+        cur.execute(q)
+        conn.commit()
+        conn.close()
 
-def record(type:str, amount, num1, num2=''):
-        timestamp = datetime.datetime.now()
+    def persistTransaction(self):
+        conn = connect_to_postgres()
+        q = '''INSERT INTO transactions (source, target, amount, datetime)
+                                values({},{},{},{})'''.format(self.id, tgt.id, self.interest_rate,
+                                                                       '\'' + self.type + '\'',
+                                                                       '\'' + self.interest_recalc_date + '\'',
+                                                                       '\'' + self.opening_date + '\'',
+                                                                       '\'' + self.term_date + '\'')
+        cur = conn.cursor()
+        print(q)
+        cur.execute(q)
+        conn.commit()
+        conn.close()
 
-        with open(history, 'r') as infile:
-            hist = json.load(infile)
-            if not hist:
-                hist["1"] = {}
-            else:
-                hist[str(int(list(hist.keys())[-1])+1)] = {}
-            hist[str(int(list(hist.keys())[-1]))]['Time']= str(timestamp)
-            hist[str(int(list(hist.keys())[-1]))]["Transaction Type"] = type
-            hist[str(int(list(hist.keys())[-1]))]['AccountID'] = num1
-            if type == "Transfer":
-                hist[str(int(list(hist.keys())[-1]))]['RecipientID'] = num2
-            hist[str(int(list(hist.keys())[-1]))]['amount'] = amount
-        with open(history, 'w') as outfile:
-            json.dump(hist, outfile)
+    def getAllAcc(self):
+        pass
 
 
-def modifyAccount():
-    num = str(input("Please choose the ID of the account to be modified: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        data[num]['type'] = input('Please choose the account type (C/D): ')
-        data[num]['interest'] = float(input('Please choose the interest rate: '))
-        data[num]['deposit'] = int(input('Enter the new deposit amount: '))
-        if data[num]['type'] == "D":
-            data[num]['termdate'] = str(date.today() + timedelta(days=365))
-        else:
-            del data[num]['termdate']
-        print('Account Updated')
-
-    with open(accfp, 'w') as outfile:
-        json.dump(data, outfile)
-
-def deleteAccount():
-    num = str(input("Choose the ID of the account to be deleted: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        del data[num]
-
-    with open(accfp, 'w') as outfile:
-        json.dump(data, outfile)
-    print('Account Deleted')
-
-def writeAccount():
-    account = Account()
-    account.createAccount()
-    account.saveAccount()
-
-
-def depositAccount():
-    num = str(input("Please select the AccId to deposit: "))
-    amount = int(input("Please enter the amount to deposit: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        data[num]['deposit'] += amount
-
-    with open(accfp, 'w') as outfile:
-        json.dump(data, outfile)
-
-    record("Deposit",amount,num)
-    print('Deposit Accepted')
-
-def withdrawAccount():
-    num = str(input("Please select the AccId to withdraw money from: "))
-    amount = int(input("Please enter the amount to withdraw: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        if data[num]['deposit'] < amount:
-            print("You don't have enough money. You have: "+ data[num]['deposit'])
-        elif 'termdate' in data[num] and data[num]['termdate'] != str(date.today()):
-            print("It is a Deposit account. You can transfer money only on:"+ data[num]['termdate'])
-        else:
-            data[num]['deposit'] -= amount
-            print("Amount withdraw successfully.")
-
-    with open(accfp, 'w') as outfile:
-        json.dump(data, outfile)
-
-    record("Withdraw", amount, num)
-    print('Amount withdraw end.')
-
-def transferAccount():
-    num1 = str(input("Please select the id to transfer money FROM: "))
-    num2 = str(input("Please select the id to transfer money TO: "))
-    amount = int(input("How much ?: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        if data[num1]['deposit'] < amount:
-            print("You don't have enough money. You have: " + data[num1]['deposit'])
-        elif 'termdate' in data[num1] and data[num1]['termdate'] != str(date.today()):
-            raise ValueError("It is a Deposit account. You can transfer money only on:" + data[num]['termdate'])
-        else:
-            data[num1]['deposit'] -= amount
-            data[num2]['deposit'] += amount
-            print('Amount withdraw Successfully')
-    with open(accfp, 'w') as outfile:
-        json.dump(data, outfile)
-
-    record("Transfer",amount,num1,num2)
-    print('Transaction end.')
-
-def balanceAccount():
-    num = str(input("Please select the id to display the balance: "))
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        print("The current balance of the account is: "+data[num]['deposit'])
-
-def listAccount():
-    with open(accfp, 'r') as infile:
-        data = json.load(infile)
-        dumped = json.dumps(data, indent=2)
-        print(dumped)
-
-ch = ''
-num = 0
-
-def intro():
-    print("\t\t\t\t**********************")
-    print("\t\t\t\tBANK MANAGEMENT SYSTEM")
-    print("\t\t\t\t**********************")
-
-    print("\t\t\t\tBrought To You By:")
-    print("\t\t\t\tAngel Kostadinov")
-    input()
-
-intro()
-
-while ch != 9:
-    print("\tMAIN MENU")
-    print("\t1. NEW ACCOUNT")
-    print("\t2. DEPOSIT AMOUNT")
-    print("\t3. WITHDRAW AMOUNT")
-    print("\t4. BALANCE ENQUIRY")
-    print("\t5. ALL ACCOUNT HOLDER LIST")
-    print("\t6. CLOSE AN ACCOUNT")
-    print("\t7. MODIFY AN ACCOUNT")
-    print("\t8. TRANSFER BETWEEN BANK ACCOUNTS")
-    print("\t9. EXIT")
-    print("\tSelect Your Option (1-8) ")
-    ch = input()
-
-    if ch == '1':
-        writeAccount()
-    elif ch == '2':
-        depositAccount()
-    elif ch == '3':
-        withdrawAccount()
-    elif ch == '4':
-        balanceAccount()
-    elif ch == '5':
-        listAccount()
-    elif ch == '6':
-        deleteAccount()
-    elif ch == '7':
-        modifyAccount()
-    elif ch == '8':
-        transferAccount()
-    elif ch == '9':
-        print("\tThanks for using bank management system")
-        break
-    else:
-        print("Invalid choice")
-
-    ch = input("Press 'Enter' to Continue\t")
+class JSONPersistanceEngine(PersistanceEngine):
+    pass

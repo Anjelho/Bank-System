@@ -1,4 +1,4 @@
-import bank
+import banky
 import datetime
 #difference = bank.date.today() - datetime.date(2020, 2, 1)
 #print(int(difference))
@@ -11,5 +11,5 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 d = datetime.date(2019, 2 ,5)
-x=days_between(str(bank.date.today()), str(datetime.date(2020, 2 , 1)))
+x=days_between(str(banky.date.today()), str(datetime.date(2020, 2, 1)))
 print(x)

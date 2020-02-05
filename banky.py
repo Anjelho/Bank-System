@@ -5,6 +5,7 @@ from datetime import timedelta
 from datetime import datetime as dtm
 import psycopg2 as pg
 import json
+import pandas as pd
 
 def connect_to_postgres():
     """Returns a connection to the database.

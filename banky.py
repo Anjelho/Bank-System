@@ -50,7 +50,8 @@ class Account:
 
     def deposit(self, amount):
         self.balance += amount
-        tr = Transaction(self.accid, self.accid, amount, 'deposit', date.today())
+        tr = Transaction(self.accid, self.accid, amount, 'deposit', dtm.now())
+        tr.persistTransaction(PGPersistanceEngine())
         self.__trlist.append(tr)
 
 
@@ -61,20 +62,22 @@ class Account:
             raise ValueError("It is a Deposit account. And the term_date is: " + str(self.term_date))
         else:
             self.balance = Account.days_between(self) - amount
-            tr = Transaction(self.accid, self.accid, amount, 'withdraw', date.today())
+            tr = Transaction(self.accid, self.accid, amount, 'withdraw', dtm.now())
+            tr.persistTransaction(PGPersistanceEngine())
             self.interest_recalc_date = str(date.today())
             self.__trlist.append(tr)
 
     def transfer(self, amount, tgt):
 
-        if Account.days_between(self) < amount:
+        if float(Account.days_between(self)) < float(amount):
             raise ValueError("Withdraw not possible. Not enough funds.")
         elif self.term_date is not None and self.term_date > date.today():
             raise ValueError("It is a Deposit account.")
         else:
             self.balance = Account.days_between(self) - amount
             tgt.balance += amount
-            tr = Transaction(self.accid, tgt.id, amount, 'transfer', date.today())
+            tr = Transaction(self.accid, tgt.accid, amount, 'transfer', str(dtm.now()))
+            tr.persistTransaction(PGPersistanceEngine())
             self.interest_recalc_date = str(date.today())
             self.__trlist.append(tr)
 
@@ -104,19 +107,16 @@ class Transaction:
         return self.__trlist
 
 
-    def __init__(self, src, tgt, amount, transaction_type, transaction_date):
+    def __init__(self, src, tgt, amount, transaction_type, transaction_date, persistanceengine = "PGPersistanceEngine"):
         self.src = src
         self.tgt = tgt
         self.amount = amount
         self.transaction_type = transaction_type
         self.transaction_date = transaction_date
+        self.persistanceengine = persistanceengine
 
-        self.__trlist = []
-
-        self.__trlist.append(src)
-        self.__trlist.append(tgt)
-        self.__trlist.append(amount)
-        self.__trlist.append(type)
+    def persistTransaction(self, persistanceengine):
+        persistanceengine.persistTransaction(self)
 
 
 class PersistanceEngine(ABC):
@@ -135,6 +135,7 @@ class PersistanceEngine(ABC):
 
 
 class PGPersistanceEngine(PersistanceEngine):
+
 
     def open(self):
         """Returns a connection to the database.
@@ -164,10 +165,11 @@ class PGPersistanceEngine(PersistanceEngine):
         conn.commit()
         conn.close()
 
+
     def persistTransaction(self, tr: "Transaction"):
-        conn = PGPersistanceEngine.open()
-        q_deposit = '''INSERT INTO transactions (source, target, amount, transaction_type, date)
-                                values({},{},{},{},{})'''.format(tr.src, tr.tgt, tr.amount, tr.type, tr.transaction_date)
+        conn = PGPersistanceEngine.open(self)
+        q = '''INSERT INTO transactions (source, target, amount, transaction_type, datetime)
+                                values({},{},{},'''.format(tr.src, tr.tgt, tr.amount) +'\''+tr.transaction_type +'\','+'\''+str(tr.transaction_date)+'\')'
 
 
         cur = conn.cursor()
@@ -175,6 +177,7 @@ class PGPersistanceEngine(PersistanceEngine):
         cur.execute(q)
         conn.commit()
         conn.close()
+
 
     def getAllAcc(self):
         pass

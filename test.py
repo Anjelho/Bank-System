@@ -1,13 +1,17 @@
 import banky
 
-a = banky.Account(1, 100, '2020-01-25', 'c', 10, 'PGPersistanceEngine')
+a = banky.Account(1, 100, '2020-02-04', 'c', 10, 'PGPersistanceEngine')
 b = banky.Account(2, 200, '2020-01-18', 'd', 5, 'PGPersistanceEngine')
 
-#a.displayAcc()
-b.term_date = banky.date(2020, 1, 1)
-b.interest_recalc_date = banky.date(2020, 1, 30)
+a.displayAcc()
+a.transfer(b,10)
+
+pgpe = banky.PGPersistanceEngine()
+
+a.persistAccount(persistanceengine=pgpe)
+#b.interest_recalc_date = banky.date(2020, 1, 30)
 #b.withdraw(450)
-b.displayAcc()
+#b.displayAcc()
 
 #print(str(bank.date(2020,1,25)))
 #print(a.displayAcc())
@@ -19,5 +23,5 @@ b.displayAcc()
 #bank.Account.displayAcc(a)
 #bank.Account.displayAcc(b)
 
-pe = banky.PGPersistanceEngine(1, 100, '2020-1-25', 10, 'c', '2020-5-16', '2020-2-4')
-pe.persistAcc()
+#pe = banky.PGPersistanceEngine(1, 100, '2020-1-25', 10, 'c', '2020-5-16', '2020-2-4')
+#pe.persistAcc()

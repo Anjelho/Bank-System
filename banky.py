@@ -5,17 +5,6 @@ from datetime import timedelta
 from datetime import datetime as dtm
 import psycopg2 as pg
 import json
-import pandas as pd
-
-def connect_to_postgres():
-    """Returns a connection to the database.
-
-    TODO: Remove hardcoded connection string
-    """
-    with open("config/parameters.json") as json_config:
-        cfg = json.load(json_config)
-
-    return pg.connect(cfg['postgresql'])
 
 class Account:
 
@@ -33,7 +22,6 @@ class Account:
         self.opening_date = opening_date
         self.interest_recalc_date = opening_date
         self.interest_rate = interest_rate
-        self.__acclist = []
         self.persisanceengine = persistanceengine
 
         if acctype == "c" or acctype == "C":
@@ -58,8 +46,7 @@ class Account:
 
     def deposit(self, amount):
         self.balance += amount
-        tr = Transaction(self.id, self.id, amount, 'deposit')
-        self.__acclist.append(tr)
+        tr = Transaction(self.id, self.id, amount, 'deposit', date.today())
 
 
     def withdraw(self, amount):
@@ -70,10 +57,8 @@ class Account:
             raise ValueError("It is a Deposit account. And the term_date is: " + str(self.term_date))
         else:
             self.balance -= amount
-            tr = Transaction(self.id, self.id, amount, 'withdraw')
-            self.__acclist.append(tr)
+            tr = Transaction(self.id, self.id, amount, 'withdraw', date.today())
             self.interest_recalc_date = str(date.today())
-
 
 
     def transfer(self, amount, tgt):
@@ -85,13 +70,12 @@ class Account:
         else:
             self.balance -= amount
             tgt.balance += amount
-            tr = Transaction(self.id, tgt.id, amount, 'transfer')
-            self.__acclist.append(tr)
+            tr = Transaction(self.id, tgt.id, amount, 'transfer', date.today())
             self.interest_recalc_date = str(date.today())
 
 
     def displayAcc(self):
-        Account.days_between(self)
+        #Account.days_between(self)
         print("Acc Nr: "+ str(self.id))
         print("Acc balance: " + str(self.balance))
         print("Acc opening_date: " + str(self.opening_date))
@@ -103,8 +87,9 @@ class Account:
         print("Acc type: " + self.type)
 
 
-    def persistAccount(self):
+    def persistAccount(self, persistanceengine: "PersistanceEngine"):
         Account.days_between(self)
+        persistanceengine.persistAcc(self)
         if hasattr(self, 'id'):
             self.__acclist.append(self.id)
         if hasattr(self, 'balance'):
@@ -130,7 +115,12 @@ class Transaction:
         return self.__trlist
 
 
-    def __init__(self, src, tgt, amount, type):
+    def __init__(self, src, tgt, amount, type, transaction_date):
+        self.src = src
+        self.tgt = tgt
+        self.amount = amount
+        self.type = type
+        self.transaction_date = transaction_date
 
         self.__trlist = []
 
@@ -138,17 +128,16 @@ class Transaction:
         self.__trlist.append(tgt)
         self.__trlist.append(amount)
         self.__trlist.append(type)
-        return(self.persistanceengine(self.__trlist))
 
 
 class PersistanceEngine(ABC):
 
     @abstractmethod
-    def persistAcc(self):
+    def persistAcc(self, acc: "Account"):
         pass
 
     @abstractmethod
-    def persistTransaction(self):
+    def persistTransaction(self, tr: "Transaction"):
         pass
 
     @abstractmethod
@@ -158,33 +147,30 @@ class PersistanceEngine(ABC):
 
 class PGPersistanceEngine(PersistanceEngine):
 
-    def __init__(self,id,balance,opening_date,interest_rate,type,term_date,interest_recalc_date):
-        self.id = id
-        self.balance = balance
-        self.opening_date = opening_date
-        self.interest_rate = interest_rate
-        self.type = type
-        self.term_date = term_date
-        self.interest_recalc_date = interest_recalc_date
+    def open(self):
+        """Returns a connection to the database.
+        """
 
-    def persistAcc(self):
-        conn = connect_to_postgres()
+        with open("config/parameters.json") as json_config:
+            cfg = json.load(json_config)
+
+        return pg.connect(cfg['postgresql'])
+
+
+    def persistAcc(self, acc: "Account"):
+        conn = self.open()
         q = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date, term_date)
-                        values({},{},{},{},{},{},{})'''.format(self.id, self.balance, self.interest_rate, '\''+self.type+'\'', '\''+self.interest_recalc_date+'\'', '\''+self.opening_date+'\'', '\''+self.term_date+'\'')
+                        values({},{},{},{},{},{},{})'''.format(acc.id, acc.balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.interest_recalc_date+'\'', '\''+acc.opening_date+'\'', '\''+str(acc.term_date)+'\'')
         cur = conn.cursor()
         print(q)
         cur.execute(q)
         conn.commit()
         conn.close()
 
-    def persistTransaction(self):
-        conn = connect_to_postgres()
-        q = '''INSERT INTO transactions (source, target, amount, datetime)
-                                values({},{},{},{})'''.format(self.id, tgt.id, self.interest_rate,
-                                                                       '\'' + self.type + '\'',
-                                                                       '\'' + self.interest_recalc_date + '\'',
-                                                                       '\'' + self.opening_date + '\'',
-                                                                       '\'' + self.term_date + '\'')
+    def persistTransaction(self, tr: "Transaction"):
+        conn = PGPersistanceEngine.open()
+        q = '''INSERT INTO transactions (source, target, amount, transaction_type, date)
+                                values({},{},{},{},{})'''.format(tr.src, tr.tgt, tr.amount, tr.type, tr.transaction_date)
         cur = conn.cursor()
         print(q)
         cur.execute(q)

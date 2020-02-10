@@ -9,46 +9,43 @@ import json
 
 class Account:
 
-    __trlist: List["TransactionList"]
     __persistanceengine: "PersistanceEngine"
 
-    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", __trlist: []):
-        self.acc_id = acc_id
+    def __init__(self, account_num, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", transaction_list):
+        self.account_num = account_num
         self.opening_balance = opening_balance
         self.current_balance = current_balance
         self.opening_date = opening_date
         self.interest_rate = interest_rate
         self.last_interest_date = last_interest_date
-        self.persisance_engine = persistance_engine
-        self.__trlist = []
+        self.persistance_engine = persistance_engine
+        self.transaction_list = transaction_list
 
     def deposit(self, amount):
+        """ modifier/mutator to deposit to account """
         self.accrue_interest()
         self.current_balance += amount
 
     def withdraw(self, amount):
+        """ modifier/mutator to withdraw from account """
         if self.accrue_interest() < amount:
             raise ValueError("Not enough Money!")
         else:
             self.current_balance -= amount
 
-    def transfer(self, amount, tgt):
+    def transfer(self, amount, target):
+        """ modifier/mutator to transfer amount from one account to another """
         if self.accrue_interest() < amount:
             raise ValueError("Not enough Money!")
         else:
             self.current_balance -= amount
-            tgt.current_balance += amount
+            target.current_balance += amount
 
     def persist_account(self, persistance_engine: "PersistanceEngine"):
         pass
 
     def accrue_interest(self):
-        '''
-
-        Transaction have to be done with this method.
-
-        '''
-
+        """Transaction have to be done with this method."""
         d1 = dtm.strptime(str(self.last_interest_date), "%Y-%m-%d")
         d2 = dtm.strptime(str(date.today()), "%Y-%m-%d")
         difference = abs((d2 - d1).days)
@@ -57,18 +54,27 @@ class Account:
         self.last_interest_date = date.today()
         return current_balance
 
+    def create(self):
+        pass
+
+    def check_account(self):
+        pass
+
+    def init(self):
+        pass
+
 
 class CurrentAccount(Account):
-
-    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", __trlist: []):
-        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine, __trlist)
+    """ subclass for current account"""
+    def __init__(self, account_num, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", transaction_list):
+        super().__init__(account_num, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine, transaction_list)
         self.last_interest_date = last_interest_date
 
 
 class DepositAccount(Account):
-
-    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine: "PersistanceEngine", __trlist: []):
-        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine, __trlist)
+    """ subclass for Deposit account"""
+    def __init__(self, account_num, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine: "PersistanceEngine", transaction_list):
+        super().__init__(account_num, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine, transaction_list)
         self.term_date = term_date
 
     def withdraw(self, amount):
@@ -79,14 +85,29 @@ class DepositAccount(Account):
         else:
             self.current_balance -= amount
 
-    def transfer(self, amount, tgt):
+    def transfer(self, amount, target):
         if self.current_balance < amount:
             raise ValueError("Withdraw not possible. Not enough funds.")
         elif self.term_date > date.today():
             raise ValueError('It is a Deposit account and the term date is: {}'.format(self.term_date))
         else:
             self.current_balance -= amount
-            tgt.current_balance += amount
+            target.current_balance += amount
+
+
+class TransactionList:
+    def __init__(self, history: List["Transaction"], new_transactions: List["Transaction"]):
+        self.history = history
+        self.new_transactions = new_transactions
+
+    def read(self):
+        pass
+
+    def append(self):
+        pass
+
+    def persist(self):
+        pass
 
 
 class Transaction:
@@ -102,10 +123,10 @@ class Transaction:
 
 class BankTransfer(Transaction):
 
-    def __init__(self, transaction_id, amount, transaction_date, src, tgt):
+    def __init__(self, transaction_id, amount, transaction_date, source, target):
         super().__init__(transaction_id, amount, transaction_date)
-        self.src = src
-        self.tgt = tgt
+        self.source = source
+        self.target = target
 
     def add_to_history(self):
         pass
@@ -113,9 +134,9 @@ class BankTransfer(Transaction):
 
 class CashDeposit(Transaction):
 
-    def __init__(self, transaction_id, amount, transaction_date, tgt, metadata):
+    def __init__(self, transaction_id, amount, transaction_date, target, metadata):
         super().__init__(transaction_id, amount, transaction_date)
-        self.tgt = tgt
+        self.target = target
         self.metadata = metadata
 
     def add_to_history(self):
@@ -124,9 +145,9 @@ class CashDeposit(Transaction):
 
 class CashWithdraw(Transaction):
 
-    def __init__(self, transaction_id, amount, transaction_date, src, metadata):
+    def __init__(self, transaction_id, amount, transaction_date, source, metadata):
         super().__init__(transaction_id, amount, transaction_date)
-        self.src = src
+        self.source = source
         self.metadata = metadata
 
 
@@ -138,21 +159,6 @@ class AccrueInterest(Transaction):
         self.accrue_end = accrue_end
         self.interest_granularity = interest_granularity
         self.interest_rate_per_granularity = interest_rate_per_granularity
-
-
-class TransactionList:
-
-    def __init__(self):
-        pass
-
-    def read(self):
-        pass
-
-    def append(self):
-        pass
-
-    def persist(self):
-        pass
 
 
 class PersistanceEngine(ABC):
@@ -173,8 +179,7 @@ class PersistanceEngine(ABC):
 class PGPersistanceEngine(PersistanceEngine):
 
     def open(self):
-        """Returns a connection to the database.
-        """
+        """Returns a connection to the database."""
 
         with open("config/parameters.json") as json_config:
             cfg = json.load(json_config)
@@ -183,21 +188,7 @@ class PGPersistanceEngine(PersistanceEngine):
 
     def persist_acc(self, acc: "Account"):
         conn = self.open()
-        q_deposit = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date, term_date)
-                        values({},{},{},{},{},{},{})'''.format(acc.acc_id, acc.current_balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.last_interest_date+'\'', '\''+acc.opening_date+'\'', '\''+str(acc.term_date)+'\'')
-
-        q_current = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date)
-                        values({},{},{},{},{},{})'''.format(acc.acc_id, acc.current_balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.last_interest_date+'\'', '\''+acc.opening_date+'\'')
-
-        cur = conn.cursor()
-
-        if acc.acctype == "c" or acc.acctype == "C":
-            cur.execute(q_current)
-        else:
-            cur.execute(q_deposit)
-
-        conn.commit()
-        conn.close()
+        pass
 
     def persist_transaction(self, tr: "Transaction"):
         conn = PGPersistanceEngine.open(self)

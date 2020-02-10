@@ -60,15 +60,15 @@ class Account:
 
 class CurrentAccount(Account):
 
-    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine: "PersistanceEngine", last_interest_date):
-        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine)
+    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", __trlist: []):
+        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine, __trlist)
         self.last_interest_date = last_interest_date
 
 
 class DepositAccount(Account):
 
-    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine: "PersistanceEngine", term_date):
-        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine)
+    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine: "PersistanceEngine", __trlist: []):
+        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, term_date, persistance_engine, __trlist)
         self.term_date = term_date
 
     def withdraw(self, amount):

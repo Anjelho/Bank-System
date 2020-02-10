@@ -6,117 +6,140 @@ from datetime import datetime as dtm
 import psycopg2 as pg
 import json
 
+
 class Account:
 
-    __acclist: List["Account"]
+    __trlist: List["Account"]
     __persistanceengine: "PersistanceEngine"
 
-
-    def getAccList(self):
-        return self.__acclist
-
-
-    def __init__(self, accid, balance, opening_date, acctype, interest_rate, persistanceengine: "PersistanceEngine", term_date = None):
-        self.accid = accid
-        self.balance = balance
+    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", __trlist: []):
+        self.acc_id = acc_id
+        self.opening_balance = opening_balance
+        self.current_balance = current_balance
         self.opening_date = opening_date
-        self.interest_recalc_date = opening_date
         self.interest_rate = interest_rate
-        self.persisanceengine = persistanceengine
-        self.term_date = term_date
+        self.last_interest_date = last_interest_date
+        self.persisance_engine = persistance_engine
         self.__trlist = []
 
-        if acctype == "c" or acctype == "C":
-            self.type = acctype.upper()
-        elif acctype == "d" or acctype == "D":
-            self.type = acctype.upper()
-            self.term_date = date.today() + timedelta(days=365)
+    def deposit(self, amount):
+        self.accrue_interest()
+        self.current_balance += amount
+
+    def withdraw(self, amount):
+        if self.accrue_interest() < amount:
+            raise ValueError("Not enough Money!")
         else:
-            raise ValueError("not a valid acc type please choose C or D !")
+            self.current_balance -= amount
 
+    def transfer(self, amount, tgt):
+        if self.accrue_interest() < amount:
+            raise ValueError("Not enough Money!")
+        else:
+            self.current_balance -= amount
+            tgt.current_balance += amount
 
-    def days_between(self):
-        d1 = dtm.strptime(str(self.interest_recalc_date), "%Y-%m-%d")
+    def persist_account(self, persistance_engine: "PersistanceEngine"):
+        pass
+
+    def accrue_interest(self):
+        '''
+
+        Transaction have to be done with this method.
+
+        '''
+
+        d1 = dtm.strptime(str(self.last_interest_date), "%Y-%m-%d")
         d2 = dtm.strptime(str(date.today()), "%Y-%m-%d")
         difference = abs((d2 - d1).days)
-        current_balance = self.balance
-        i = 1
-        while i <= difference:
-            current_balance = current_balance * (self.interest_rate/100+1)
-            i += 1
+        current_balance = self.current_balance * ((self.interest_rate / 100 + 1) ** difference)
+        self.current_balance = current_balance
+        self.last_interest_date = date.today()
         return current_balance
 
 
+class CurrentAccount(Account):
 
-    def deposit(self, amount):
-        self.balance += amount
-        tr = Transaction(self.accid, self.accid, amount, 'deposit', dtm.now())
-        tr.persistTransaction(PGPersistanceEngine())
-        self.__trlist.append(tr)
+    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine: "PersistanceEngine", last_interest_date):
+        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine)
+        self.last_interest_date = last_interest_date
 
+
+class DepositAccount(Account):
+
+    def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine: "PersistanceEngine", term_date):
+        super().__init__(acc_id, opening_balance, current_balance, opening_date, interest_rate, persistance_engine)
+        self.term_date = term_date
 
     def withdraw(self, amount):
-        if Account.days_between(self) < amount:
+        if self.current_balance < amount:
             raise ValueError("Withdraw not possible. Not enough funds.")
-        elif self.term_date is not None and self.term_date > date.today():
-            raise ValueError("It is a Deposit account. And the term_date is: " + str(self.term_date))
+        elif self.term_date > date.today():
+            raise ValueError('It is a Deposit account and the term date is: {}'.format(self.term_date))
         else:
-            self.balance = Account.days_between(self) - amount
-            tr = Transaction(self.accid, self.accid, amount, 'withdraw', dtm.now())
-            tr.persistTransaction(PGPersistanceEngine())
-            self.interest_recalc_date = str(date.today())
-            self.__trlist.append(tr)
+            self.current_balance -= amount
 
     def transfer(self, amount, tgt):
-
-        if float(Account.days_between(self)) < float(amount):
+        if self.current_balance < amount:
             raise ValueError("Withdraw not possible. Not enough funds.")
-        elif self.term_date is not None and self.term_date > date.today():
-            raise ValueError("It is a Deposit account.")
+        elif self.term_date > date.today():
+            raise ValueError('It is a Deposit account and the term date is: {}'.format(self.term_date))
         else:
-            self.balance = Account.days_between(self) - amount
-            tgt.balance += amount
-            tr = Transaction(self.accid, tgt.accid, amount, 'transfer', str(dtm.now()))
-            tr.persistTransaction(PGPersistanceEngine())
-            self.interest_recalc_date = str(date.today())
-            self.__trlist.append(tr)
-
-    def displayAcc(self):
-        #Account.days_between(self)
-        print("Acc Nr: "+ str(self.accid))
-        print("Acc balance: " + str(self.balance))
-        print("Acc opening_date: " + str(self.opening_date))
-        if hasattr(self, 'term_date'):
-            print("Acc term_date: " + str(self.term_date))
-            print("Acc interest_rate: " + str(self.interest_rate))
-        if hasattr(self, 'interest_recalc_date'):
-            print("Acc recalculation date: " + str(self.interest_recalc_date))
-        print("Acc type: " + self.type)
-
-
-    def persistAccount(self, persistanceengine: "PersistanceEngine"):
-        Account.days_between(self)
-        persistanceengine.persistAcc(self)
+            self.current_balance -= amount
+            tgt.current_balance += amount
 
 
 class Transaction:
 
-    __trlist: List["Transaction"]
+    def __init__(self, transaction_id, amount, transaction_date):
+        self.transaction_id = transaction_id
+        self.amount = amount
+        self.transaction_date = transaction_date
 
-    def getTrList(self):
-        return self.__trlist
+    def add_to_history(self):
+        pass
 
 
-    def __init__(self, src, tgt, amount, transaction_type, transaction_date, persistanceengine = "PGPersistanceEngine"):
+class BankTransfer(Transaction):
+
+    def __init__(self, transaction_id, amount, transaction_date, src, tgt):
+        super().__init__(transaction_id, amount, transaction_date)
         self.src = src
         self.tgt = tgt
-        self.amount = amount
-        self.transaction_type = transaction_type
-        self.transaction_date = transaction_date
-        self.persistanceengine = persistanceengine
 
-    def persistTransaction(self, persistanceengine):
-        persistanceengine.persistTransaction(self)
+    def add_to_history(self):
+        pass
+
+
+class CashDeposit(Transaction):
+
+    def __init__(self, transaction_id, amount, transaction_date, tgt, metadata):
+        super().__init__(transaction_id, amount, transaction_date)
+        self.tgt = tgt
+        self.metadata = metadata
+
+    def add_to_history(self):
+        pass
+
+
+class CashWithdraw(Transaction):
+
+    def __init__(self, transaction_id, amount, transaction_date, src, metadata):
+        super().__init__(transaction_id, amount, transaction_date)
+        self.src = src
+        self.metadata = metadata
+
+
+class AccrueInterest(Transaction):
+
+    def __init__(self, transaction_id, amount, transaction_date, accrue_start, accrue_end, interest_granularity, interest_rate_per_granularity):
+        super().__init__(transaction_id, amount, transaction_date)
+
+
+class TransactionList:
+
+    def __init__(self):
+        pass
 
 
 class PersistanceEngine(ABC):
@@ -157,7 +180,7 @@ class PGPersistanceEngine(PersistanceEngine):
 
         cur = conn.cursor()
 
-        if acc.type == "c" or acc.type == "C":
+        if acc.acctype == "c" or acc.acctype == "C":
             cur.execute(q_current)
         else:
             cur.execute(q_deposit)

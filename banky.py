@@ -9,7 +9,7 @@ import json
 
 class Account:
 
-    __trlist: List["Account"]
+    __trlist: List["TransactionList"]
     __persistanceengine: "PersistanceEngine"
 
     def __init__(self, acc_id, opening_balance, current_balance, opening_date, interest_rate, last_interest_date, persistance_engine: "PersistanceEngine", __trlist: []):
@@ -134,6 +134,10 @@ class AccrueInterest(Transaction):
 
     def __init__(self, transaction_id, amount, transaction_date, accrue_start, accrue_end, interest_granularity, interest_rate_per_granularity):
         super().__init__(transaction_id, amount, transaction_date)
+        self.accrue_start = accrue_start
+        self.accrue_end = accrue_end
+        self.interest_granularity = interest_granularity
+        self.interest_rate_per_granularity = interest_rate_per_granularity
 
 
 class TransactionList:
@@ -141,24 +145,32 @@ class TransactionList:
     def __init__(self):
         pass
 
+    def read(self):
+        pass
+
+    def append(self):
+        pass
+
+    def persist(self):
+        pass
+
 
 class PersistanceEngine(ABC):
 
     @abstractmethod
-    def persistAcc(self, acc: "Account"):
+    def persist_acc(self, acc: "Account"):
         pass
 
     @abstractmethod
-    def persistTransaction(self, tr: "Transaction"):
+    def persist_transaction(self, tr: "Transaction"):
         pass
 
     @abstractmethod
-    def getAllAcc(self):
+    def get_all_acc(self):
         pass
 
 
 class PGPersistanceEngine(PersistanceEngine):
-
 
     def open(self):
         """Returns a connection to the database.
@@ -169,14 +181,13 @@ class PGPersistanceEngine(PersistanceEngine):
 
         return pg.connect(cfg['postgresql'])
 
-
-    def persistAcc(self, acc: "Account"):
+    def persist_acc(self, acc: "Account"):
         conn = self.open()
         q_deposit = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date, term_date)
-                        values({},{},{},{},{},{},{})'''.format(acc.accid, acc.balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.interest_recalc_date+'\'', '\''+acc.opening_date+'\'', '\''+str(acc.term_date)+'\'')
+                        values({},{},{},{},{},{},{})'''.format(acc.acc_id, acc.current_balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.last_interest_date+'\'', '\''+acc.opening_date+'\'', '\''+str(acc.term_date)+'\'')
 
         q_current = '''INSERT INTO accounts (accnr, balance, interest_rate, acctype, interest_recalc_date, opening_date)
-                        values({},{},{},{},{},{})'''.format(acc.accid, acc.balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.interest_recalc_date+'\'', '\''+acc.opening_date+'\'')
+                        values({},{},{},{},{},{})'''.format(acc.acc_id, acc.current_balance, acc.interest_rate, '\''+acc.type+'\'', '\''+acc.last_interest_date+'\'', '\''+acc.opening_date+'\'')
 
         cur = conn.cursor()
 
@@ -188,23 +199,22 @@ class PGPersistanceEngine(PersistanceEngine):
         conn.commit()
         conn.close()
 
-
-    def persistTransaction(self, tr: "Transaction"):
+    def persist_transaction(self, tr: "Transaction"):
         conn = PGPersistanceEngine.open(self)
-        q = '''INSERT INTO transactions (source, target, amount, transaction_type, datetime)
-                                values({},{},{},'''.format(tr.src, tr.tgt, tr.amount) +'\''+tr.transaction_type +'\','+'\''+str(tr.transaction_date)+'\')'
+        pass
 
-
-        cur = conn.cursor()
-        print(q)
-        cur.execute(q)
-        conn.commit()
-        conn.close()
-
-
-    def getAllAcc(self):
+    def get_all_acc(self):
         pass
 
 
-class JSONPersistanceEngine(PersistanceEngine):
-    pass
+class JsonPersistanceEngine(PersistanceEngine):
+
+    def persist_acc(self, acc: "Account"):
+        pass
+
+    def persist_transaction(self, tr: "Transaction"):
+        pass
+
+    def get_all_acc(self):
+        pass
+

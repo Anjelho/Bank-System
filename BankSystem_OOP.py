@@ -40,7 +40,7 @@ class Account(object):
             raise ValueError("Not enough Money!")
         else:
             self._current_balance -= amount
-            target._current_balance += amount
+            target.current_balance += amount
 
     def persist_account(self):
         for transaction in self._transaction_list.new_transactions:

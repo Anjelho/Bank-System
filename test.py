@@ -1,9 +1,13 @@
-import banky
+import BankSystem_OOP
 
-pgpe = banky.PGPersistanceEngine()
-__trlist = banky.TransactionList
+pgpe = BankSystem_OOP.PGPersistance()
 
-a = banky.Account(1, 100, 100, '2020-02-04', 10, '2020-02-01', pgpe, __trlist)
-b = banky.Account(2,100,100,'2020-02-10',10,'2020-02-05', pgpe, __trlist)
-a.deposit(100)
-print(a.current_balance, a.last_interest_date)
+
+a = BankSystem_OOP.CurrentAccount(1, 100, 100, '2020-02-04', 10, '2020-02-08', pgpe)
+b = BankSystem_OOP.DepositAccount(1, 100, 100, '2020-02-10', 10, '2020-02-11', pgpe)
+b.deposit(50)
+
+print(b.current_balance)
+print(b.last_interest_date)
+print(b.opening_date)
+print(b.opening_balance)

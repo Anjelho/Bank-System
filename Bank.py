@@ -12,54 +12,60 @@ class Account(object):
     """Class that represents Bank account"""
 
     def __init__(self, account_num: int, balance: float, opening_date, interest_rate: float, persistance_engine: "Persistable"):
-        self._account_num = account_num
-        self._opening_balance = balance
-        self._current_balance = balance
-        self._opening_date = datetime.strptime(opening_date, "%Y-%m-%d").date()
-        self._interest_rate = interest_rate
-        self._last_interest_date = datetime.strptime(opening_date, "%Y-%m-%d").date()
-        self._persistance_engine = persistance_engine
-        self._transaction_list = TransactionList()
+        self.account_num = account_num
+        self.opening_balance = balance
+        self.current_balance = balance
+        self.opening_date = datetime.strptime(opening_date, "%Y-%m-%d").date()
+        self.interest_rate = interest_rate
+        self.last_interest_date = datetime.strptime(opening_date, "%Y-%m-%d").date()
+        self.persistance_engine = persistance_engine
+        self.transaction_list = TransactionList()
 
     def deposit(self, amount):
         """ modifier/mutator to deposit to account"""
         self.accrue_interest()
-        self._current_balance += amount
-        self._last_interest_date = datetime.now()
+        self.current_balance += amount
+        self.last_interest_date = datetime.now()
 
     def withdraw(self, amount):
         """ modifier/mutator to withdraw from account """
         if self.accrue_interest() < amount:
             raise ValueError("Not enough Money!")
         else:
-            self._current_balance -= amount
+            self.current_balance -= amount
+            self.last_interest_date = datetime.now()
 
     def transfer(self, amount, target):
         """ modifier/mutator to transfer amount from one account to another """
         if self.accrue_interest() < amount:
             raise ValueError("Not enough Money!")
         else:
-            self._current_balance -= amount
+            self.current_balance -= amount
             target.current_balance += amount
+            self.last_interest_date = datetime.now()
 
     def persist_account(self):
-        for transaction in self._transaction_list.new_transactions:
-            transaction.persist()
-            self._transaction_list.history_transactions.append(transaction)
-            self._transaction_list.new_transactions.remove(transaction)
+        """Method for persisting transactions in database or json file with selected persistance engine.
+        Iterating over all transactions one by one, persisting transactions in new_transaction list,
+        moving new transactions to history list and delete new_transaction list. """
+
+        for tr in self.transaction_list.new_transactions:
+            tr.persist()
+            self.transaction_list.history_transactions.append(tr)
+            self.transaction_list.new_transactions.remove(tr)
 
         Persistable.get_default_persistance_engine().persist_account(self)
 
     def accrue_interest(self):
-        """Transaction has to be done with this method."""
-        d1 = datetime.strptime(str(self._last_interest_date), "%Y-%m-%d")
+        """Accrue interest calculation method."""
+
+        d1 = datetime.strptime(str(self.last_interest_date), "%Y-%m-%d")
         d2 = datetime.strptime(str(date.today()), "%Y-%m-%d")
         difference = abs((d2 - d1).days)
-        self._current_balance = self._current_balance * ((self._interest_rate / 100 + 1) ** difference)
+        self.current_balance = self.current_balance * ((self.interest_rate / 100 + 1) ** difference)
 
     def create(self):
-        """When you create account you pass account number , but this number may already exsist.
-         When account is being created it must be initialized from storage with init method."""
+        """When account is being created it must be initialized from storage with init method."""
         pass
 
     def check_account(self, account_number):    # Must check for existing account on transfer method call
@@ -67,7 +73,7 @@ class Account(object):
         pass
 
     def init(self):
-        """Opposite of method persist - restore info for this account from storage"""
+        """Opposite of method persist - restore info for account from storage"""
         pass
 
 
@@ -76,34 +82,49 @@ class CurrentAccount(Account):
     def __init__(self, account_num, balance, opening_date, interest_rate, persistance_engine: "Persistable"):
         super().__init__(account_num, balance, opening_date, interest_rate, persistance_engine)
 
+        if datetime.strptime(opening_date, "%Y-%m-%d").date() < datetime.today().date():
+            raise ValueError('Opening date cannot be earlier than Current day')
+
+        elif account_num < 0:
+            raise ValueError('Account number cannot be negative')
+
 
 class DepositAccount(Account):
     """ subclass for Deposit account"""
     def __init__(self, account_num, balance, opening_date, interest_rate, term_date, persistance_engine: "Persistable"):
         super().__init__(account_num, balance, opening_date, interest_rate, persistance_engine)
-        self._term_date = term_date
+        self.term_date = datetime.strptime(term_date, "%Y-%m-%d").date()
+
+        if datetime.strptime(term_date, "%Y-%m-%d").date() < datetime.today().date():
+            raise ValueError('Term date cannot be earlier than Current day')
+
+        elif datetime.strptime(opening_date, "%Y-%m-%d").date() < datetime.today().date():
+            raise ValueError('Opening date cannot be earlier than Current day')
+
+        elif account_num < 0:
+            raise ValueError('Account number cannot be negative')
 
     def withdraw(self, amount):
         """ modifier/mutator to withdraw from Deposit account.
         Deposit accounts has additional restriction - Withdrawn is possible only on term date"""
 
-        if self._current_balance < amount:
+        if self.current_balance < amount:
             raise ValueError("Withdraw not possible. Not enough funds.")
-        elif self._term_date > date.today():
-            raise ValueError('It is a Deposit account and the term date is: {}'.format(self._term_date))
+        elif self.term_date > date.today():
+            raise ValueError('It is a Deposit account and the term date is: {}'.format(self.term_date))
         else:
-            self._current_balance -= amount
+            self.current_balance -= amount
 
     def transfer(self, amount, target):
         """ modifier/mutator to transfer amount from Deposit account to another account.
          Deposit accounts has additional restriction - transfer is possible only on term date"""
 
-        if self._current_balance < amount:
+        if self.current_balance < amount:
             raise ValueError("Withdraw not possible. Not enough funds.")
-        elif self._term_date > date.today():
-            raise ValueError('It is a Deposit account and the term date is: {}'.format(self._term_date))
+        elif self.term_date > date.today():
+            raise ValueError('It is a Deposit account and the term date is: {}'.format(self.term_date))
         else:
-            self._current_balance -= amount
+            self.current_balance -= amount
             target.current_balance += amount
 
 
@@ -125,8 +146,8 @@ class TransactionList:
         return TransactionList.read(self)
 
     def persist(self):
-        for transaction in self.new_transactions:
-            transaction.persist()
+        for tr in self.new_transactions:
+            tr.persist()
 
 
 class Transaction:
@@ -167,7 +188,7 @@ class CashDeposit(Transaction):
         self.metadata = metadata
 
     def persist(self):
-        Persistable.get_default_persistance_engine().persist_cash_deposit_transaction(self)
+        Persistable.get_default_persistance_engine().persist_cash_movement_transaction(self)
         pass
 
     def add_to_history(self):
@@ -183,6 +204,7 @@ class CashWithdraw(Transaction):
     def persist(self):
         Persistable.get_default_persistance_engine().cash_movement_transaction(self)
 
+
 class AccrueInterest(Transaction):
 
     def __init__(self, transaction_id, amount, transaction_date, accrue_start, accrue_end, interest_granularity, interest_rate_per_granularity):
@@ -195,16 +217,15 @@ class AccrueInterest(Transaction):
 
 class Persistable(ABC):
 
+    def get_default_persistance_engine(self):
+        pass
+
     @abstractmethod
     def persist_account(self, acc: "Account"):
         pass
 
     @abstractmethod
     def persist_bank_transfer_transaction(self, tr: "Transaction"):
-        pass
-
-    @abstractmethod
-    def persist_cash_deposit_transaction(self, tr: "Transaction"):
         pass
 
     @abstractmethod
@@ -242,13 +263,8 @@ class PGPersistance(Persistable):
         conn = PGPersistance.open(self)
         pass
 
-    def persist_cash_deposit_transaction(self, tr: "Transaction"):
-        conn = PGPersistance.open(self)
-        pass
-
     def persist_cash_movement_transaction(self, tr: "Transaction"):
         pass
-
 
     def persist_transaction_list(self, tr: "Transaction"):
         conn = PGPersistance.open(self)
@@ -264,6 +280,8 @@ class PGPersistance(Persistable):
 
 class JsonPersistance(Persistable):
 
+    def open(self):
+        pass
     def persist_account(self, acc: "Account"):
         pass
 

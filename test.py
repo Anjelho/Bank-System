@@ -1,13 +1,17 @@
-import BankSystem_OOP
+import Bank
 
-pgpe = BankSystem_OOP.PGPersistance()
+pgpe = Bank.PGPersistance()
 
 
-a = BankSystem_OOP.CurrentAccount(1, 100, 100, '2020-02-04', 10, '2020-02-08', pgpe)
-b = BankSystem_OOP.DepositAccount(1, 100, 100, '2020-02-10', 10, '2020-02-11', pgpe)
-b.deposit(50)
+a = Bank.CurrentAccount(1, 100, '2020-02-12', 10, pgpe)
+b = Bank.DepositAccount(2, 100, '2020-02-12', 10, '2021-02-11', pgpe)
+a.deposit(50)
 
 print(b.current_balance)
-print(b.last_interest_date)
+print(b.term_date)
 print(b.opening_date)
 print(b.opening_balance)
+
+print(a.current_balance)
+print(a.opening_date)
+print(a.opening_balance)

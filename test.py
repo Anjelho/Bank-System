@@ -1,17 +1,8 @@
 import Bank
 
-pgpe = Bank.PGPersistance()
+pgpe = Bank.PersistanceEngineFactory("Postgres")
 
-
-a = Bank.CurrentAccount(1, 100, '2020-02-12', 10, pgpe)
-b = Bank.DepositAccount(2, 100, '2020-02-12', 10, '2021-02-11', pgpe)
-a.deposit(50)
-
-print(b.current_balance)
-print(b.term_date)
-print(b.opening_date)
-print(b.opening_balance)
-
-print(a.current_balance)
-print(a.opening_date)
-print(a.opening_balance)
+a = Bank.CurrentAccount(1, 100, '2020-02-13', 10)
+b = Bank.DepositAccount(2, 100, '2020-02-13', 10, '2020-02-13')
+b.withdraw(10)
+b.persist_account_transactions(pgpe)

@@ -1,9 +1,15 @@
 import Bank
 storage = Bank.PersistanceEngineFactory("Json")
 
-a = Bank.CurrentAccount(1, 100, '2020-01-30', 10, '2020-02-13', storage)
+a = Bank.CurrentAccount(1, 100, '2020-01-30', 10, '2020-02-14', storage)
 b = Bank.DepositAccount(2, 200, '2020-01-18', 10, '2020-02-10', '2020-02-13', storage)
-a.persist_account()
+acc = storage.init_account_from_storage('1')
+acc2 = storage.init_account_from_storage('2')
+acc.withdraw(10,'12')
+acc.persist_account_transactions()
+#b.persist_account()
+#a.withdraw(10,'shisha')
+#a.persist_account_transactions()
 #acc = storage.init_account_from_storage(1)
 #acc2 = storage.init_account_from_storage(2)
 #acc.transfer(10, acc2)

@@ -471,85 +471,92 @@ class PGPersistanceEngine(PersistanceEngine):
 
 
 class JSONPersistanceEngine(PersistanceEngine):
-    @staticmethod
-    def open_accounts():
-        return 'config/accounts.json'
 
-    @staticmethod
-    def open_transactions():
-        return 'config/transactions.json'
+    def open_transactions(self):
+        with open('config/transactions.json', 'r') as infile:
+            account = json.load(infile)
+        return account
+
+    def save_transactions(self, data):
+        with open('config/transactions.json', 'w') as outfile:
+            json.dump(data, outfile)
+
+    def open_accounts(self):
+        with open('config/accounts.json', 'r') as infile:
+            account = json.load(infile)
+        return account
+
+    def save_accounts(self, data):
+        with open('config/accounts.json', 'w') as outfile:
+            json.dump(data, outfile)
 
     def persist_account(self, acc: dict):
-        with open(self.open_accounts(), 'r') as infile:
-            account = json.load(infile)
-            account[acc['acc_id']] = acc
+        account = self.open_accounts()
+        account[acc['acc_id']] = acc
 
-        with open(self.open_accounts(), 'w') as outfile:
-            json.dump(account, outfile)
+        self.save_accounts(account)
 
     def persist_cash_movement_deposit(self, tr: dict):
-        with open(self.open_transactions(), 'r') as infile:
-            data = json.load(infile)
-            data[tr['transaction_id']] = {}
-            data[tr['transaction_id']]['src'] = tr['src']
-            data[tr['transaction_id']]['tgt'] = tr['tgt']
-            data[tr['transaction_id']]['datetime'] = tr['transaction_date']
-            data[tr['transaction_id']]['amount'] = tr['amount']
-            data[tr['transaction_id']]['transaction_type'] = tr['metadata']
-
-        with open(self.open_transactions(), 'w') as outfile:
-            json.dump(data, outfile)
-
-        with open(self.open_accounts(), 'r') as infile:
-            data = json.load(infile)
-            data[str(tr['tgt'])]['current_balance'] += tr['amount']
-
-        with open(self.open_accounts(), 'w') as outfile:
-            json.dump(data, outfile)
+        account = self.open_accounts()
+        transaction = self.open_transactions()
+        transaction[tr['transaction_id']] = {}
+        transaction[tr['transaction_id']]['src'] = tr['src']
+        transaction[tr['transaction_id']]['tgt'] = tr['tgt']
+        transaction[tr['transaction_id']]['datetime'] = tr['transaction_date']
+        transaction[tr['transaction_id']]['amount'] = tr['amount']
+        transaction[tr['transaction_id']]['transaction_type'] = tr['metadata']
+        account[str(tr['tgt'])]['current_balance'] += tr['amount']
+        account[str(tr['tgt'])]['interest_date'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")
+        self.save_accounts(account)
+        self.save_transactions(transaction)
 
     def persist_cash_movement_withdraw(self, tr: dict):
-        with open(self.open_transactions(), 'r') as infile:
-            data = json.load(infile)
-            data[tr['transaction_id']] = {}
-            data[tr['transaction_id']]['src'] = tr['src']
-            data[tr['transaction_id']]['tgt'] = tr['tgt']
-            data[tr['transaction_id']]['datetime'] = tr['transaction_date']
-            data[tr['transaction_id']]['amount'] = tr['amount']
-            data[tr['transaction_id']]['transaction_type'] = tr['metadata']
-
-        with open(self.open_transactions(), 'w') as outfile:
-            json.dump(data, outfile)
-
-        with open(self.open_accounts(), 'r') as infile:
-            data = json.load(infile)
-            data[str(tr['tgt'])]['current_balance'] -= tr['amount']
-
-        with open(self.open_accounts(), 'w') as outfile:
-            json.dump(data, outfile)
+        account = self.open_accounts()
+        transaction = self.open_transactions()
+        transaction[tr['transaction_id']] = {}
+        transaction[tr['transaction_id']]['src'] = tr['src']
+        transaction[tr['transaction_id']]['tgt'] = tr['tgt']
+        transaction[tr['transaction_id']]['datetime'] = tr['transaction_date']
+        transaction[tr['transaction_id']]['amount'] = tr['amount']
+        transaction[tr['transaction_id']]['transaction_type'] = tr['metadata']
+        account[str(tr['tgt'])]['current_balance'] -= tr['amount']
+        account[str(tr['tgt'])]['interest_date'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")
+        self.save_accounts(account)
+        self.save_transactions(transaction)
 
     def persist_bank_transfer_transaction(self, tr: dict):
-        with open(self.open_transactions(), 'r') as infile:
-            data = json.load(infile)
-            data[tr['transaction_id']] = {}
-            data[tr['transaction_id']]['src'] = tr['src']
-            data[tr['transaction_id']]['tgt'] = tr['tgt']
-            data[tr['transaction_id']]['datetime'] = tr['transaction_date']
-            data[tr['transaction_id']]['amount'] = tr['amount']
-            data[tr['transaction_id']]['transaction_type'] = tr['metadata']
+        account = self.open_accounts()
+        transaction = self.open_transactions()
+        transaction[tr['transaction_id']] = {}
+        transaction[tr['transaction_id']]['src'] = tr['src']
+        transaction[tr['transaction_id']]['tgt'] = tr['tgt']
+        transaction[tr['transaction_id']]['datetime'] = tr['transaction_date']
+        transaction[tr['transaction_id']]['amount'] = tr['amount']
+        transaction[tr['transaction_id']]['transaction_type'] = tr['metadata']
+        account[str(tr['tgt'])]['current_balance'] += tr['amount']
+        account[str(tr['tgt'])]['interest_date'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")
+        account[str(tr['src'])]['current_balance'] -= tr['amount']
+        account[str(tr['src'])]['interest_date'] = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")
+        self.save_accounts(account)
+        self.save_transactions(transaction)
 
-        with open(self.open_transactions(), 'w') as outfile:
-            json.dump(data, outfile)
+    def init_account_from_storage(self, id):
+        account = self.open_accounts()
+        acc = account.get(id)
+        acc_id = acc['acc_id']
+        current_balance = acc['current_balance']
+        interest_rate = acc['interest_rate']
+        acc_type = acc['acc_type']
+        interest_date = acc['interest_date']
+        opening_date = acc['opening_date']
+        term_date = acc['term_date']
 
-        with open(self.open_accounts(), 'r') as infile:
-            data = json.load(infile)
-            data[str(tr['tgt'])]['current_balance'] += tr['amount']
-            data[str(tr['src'])]['current_balance'] -= tr['amount']
-
-        with open(self.open_accounts(), 'w') as outfile:
-            json.dump(data, outfile)
-
-    def init_account_from_storage(self, acc):
-        pass
+        if acc_type == "C":
+            acc = CurrentAccount(acc_id, current_balance, opening_date, interest_rate, interest_date, PersistanceEngineFactory('Json'))
+            return acc
+        else:
+            acc = DepositAccount(acc_id, current_balance, opening_date, interest_rate, term_date, interest_date, PersistanceEngineFactory('Json'))
+            return acc
 
     def accrue_interest_account_update(self, tr: dict):
         pass

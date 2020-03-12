@@ -472,21 +472,25 @@ class PGPersistanceEngine(PersistanceEngine):
 
 class JSONPersistanceEngine(PersistanceEngine):
 
-    def open_transactions(self):
+    @staticmethod
+    def open_transactions():
         with open('config/transactions.json', 'r') as infile:
             account = json.load(infile)
         return account
 
-    def save_transactions(self, data):
+    @staticmethod
+    def save_transactions(data):
         with open('config/transactions.json', 'w') as outfile:
             json.dump(data, outfile)
 
-    def open_accounts(self):
+    @staticmethod
+    def open_accounts():
         with open('config/accounts.json', 'r') as infile:
             account = json.load(infile)
         return account
 
-    def save_accounts(self, data):
+    @staticmethod
+    def save_accounts(data):
         with open('config/accounts.json', 'w') as outfile:
             json.dump(data, outfile)
 
@@ -540,9 +544,9 @@ class JSONPersistanceEngine(PersistanceEngine):
         self.save_accounts(account)
         self.save_transactions(transaction)
 
-    def init_account_from_storage(self, id):
+    def init_account_from_storage(self, account_id):
         account = self.open_accounts()
-        acc = account.get(id)
+        acc = account.get(account_id)
         acc_id = acc['acc_id']
         current_balance = acc['current_balance']
         interest_rate = acc['interest_rate']

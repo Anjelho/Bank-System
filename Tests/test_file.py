@@ -1,4 +1,5 @@
-import Bank
+from BankAccount import Bank
+
 storage = Bank.PersistanceEngineFactory("Json")
 
 a = Bank.CurrentAccount(4, 1000, '2020-01-30', 10, '2020-02-14', storage)

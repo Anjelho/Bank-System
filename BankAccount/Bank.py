@@ -366,7 +366,7 @@ class PGPersistanceEngine(PersistanceEngine):
         Returns connection to the database.
         """
 
-        with open("config/parameters.json") as json_config:
+        with open("../config/parameters.json") as json_config:
             cfg = json.load(json_config)
 
         return pg.connect(cfg['localdb'])
@@ -474,24 +474,24 @@ class JSONPersistanceEngine(PersistanceEngine):
 
     @staticmethod
     def open_transactions():
-        with open('config/transactions.json', 'r') as infile:
+        with open('../config/transactions.json', 'r') as infile:
             account = json.load(infile)
         return account
 
     @staticmethod
     def save_transactions(data):
-        with open('config/transactions.json', 'w') as outfile:
+        with open('../config/transactions.json', 'w') as outfile:
             json.dump(data, outfile)
 
     @staticmethod
     def open_accounts():
-        with open('config/accounts.json', 'r') as infile:
+        with open('../config/accounts.json', 'r') as infile:
             account = json.load(infile)
         return account
 
     @staticmethod
     def save_accounts(data):
-        with open('config/accounts.json', 'w') as outfile:
+        with open('../config/accounts.json', 'w') as outfile:
             json.dump(data, outfile)
 
     def persist_account(self, acc: dict):

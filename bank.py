@@ -25,7 +25,6 @@ class Account:
     def getAccList(self):
         return self.__acclist
 
-
     def __init__(self, id, balance, opening_date, acctype, interest_rate, persistanceengine: "PersistanceEngine"):
         self.id = id
         self.balance = balance
@@ -73,8 +72,6 @@ class Account:
             self.__acclist.append(tr)
             self.interest_recalc_date = str(date.today())
 
-
-
     def transfer(self, amount, tgt):
         Account.days_between(self)
         if self.balance < amount:
@@ -87,7 +84,6 @@ class Account:
             tr = Transaction(self.id, tgt.id, amount, 'transfer')
             self.__acclist.append(tr)
             self.interest_recalc_date = str(date.today())
-
 
     def displayAcc(self):
         Account.days_between(self)
@@ -196,3 +192,4 @@ class PGPersistanceEngine(PersistanceEngine):
 
 class JSONPersistanceEngine(PersistanceEngine):
     pass
+a = Account(1,1000,'2020-02-05','c',1)
